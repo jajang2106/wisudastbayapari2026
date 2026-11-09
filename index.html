@@ -143,7 +143,8 @@
                     <select id="rsvp-status" required class="w-full bg-purple-950/80 border border-purple-700 focus:border-amber-500 rounded-xl px-4 py-2.5 text-sm text-amber-100 outline-none">
                         <option value="Hadir">Hadir</option>
                         <option value="Tidak Hadir">Tidak Hadir</option>
-                        </select>
+                        <option value="Ragu-ragu">Masih Ragu-ragu</option>
+                    </select>
                 </div>
 
                 <div>
@@ -231,7 +232,35 @@
             window.open(calUrl, '_blank');
         }
 
-       async function submitRSVP(e) {
+        function checkAlreadySubmitted() {
+            const saved = localStorage.getItem('rsvp_done_' + guestName);
+            if (saved) {
+                const data = JSON.parse(saved);
+                const alertBox = document.getElementById('rsvp-alert');
+
+                document.getElementById('submit-btn').classList.add('hidden');
+                document.getElementById('rsvp-name').disabled = true;
+                document.getElementById('rsvp-status').disabled = true;
+                document.getElementById('rsvp-guests').disabled = true;
+                document.getElementById('rsvp-message').disabled = true;
+
+                if (data.status) {
+                    document.getElementById('rsvp-status').value = data.status;
+                }
+                if (data.guests) {
+                    document.getElementById('rsvp-guests').value = data.guests;
+                }
+                if (data.message) {
+                    document.getElementById('rsvp-message').value = data.message;
+                }
+
+                alertBox.className = "mt-4 p-4 rounded-xl text-xs text-center bg-amber-950/80 border border-amber-500/50 text-amber-200";
+                alertBox.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400 text-base mb-1"></i><br>Anda sudah mengonfirmasi kehadiran sebelumnya (<b>${data.status}</b>).`;
+                alertBox.classList.remove('hidden');
+            }
+        }
+
+        async function submitRSVP(e) {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const alertBox = document.getElementById('rsvp-alert');
@@ -263,19 +292,18 @@
                     });
                 }
 
-                alertBox.className = "mt-4 p-4 rounded-xl text-xs text-center bg-emerald-950/80 border-emerald-500/50 text-emerald-200";
-                alertBox.innerText = "Terima kasih! Konfirmasi kehadiran Anda telah berhasil tersimpan.";
-                alertBox.classList.remove('hidden');
-                document.getElementById('rsvpForm').reset();
+                localStorage.setItem('rsvp_done_' + guestName, JSON.stringify({ status, guests, message }));
+                checkAlreadySubmitted();
             } catch (err) {
-                alertBox.className = "mt-4 p-4 rounded-xl text-xs text-center bg-rose-950/80 border-rose-500/50 text-rose-200";
+                alertBox.className = "mt-4 p-4 rounded-xl text-xs text-center bg-rose-950/80 border border-rose-500/50 text-rose-200";
                 alertBox.innerText = "Terjadi kendala saat mengirim. Mohon coba beberapa saat lagi.";
                 alertBox.classList.remove('hidden');
-            } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Kirim Konfirmasi</span>`;
             }
         }
+
+        document.addEventListener('DOMContentLoaded', checkAlreadySubmitted);
     </script>
 </body>
 </html>
