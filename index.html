@@ -232,34 +232,36 @@
             window.open(calUrl, '_blank');
         }
 
-        async function submitRSVP(e) {
+       async function submitRSVP(e) {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const alertBox = document.getElementById('rsvp-alert');
 
-            const payload = {
-                timestamp: new Date().toLocaleString('id-ID'),
-                name: document.getElementById('rsvp-name').value,
-                status: document.getElementById('rsvp-status').value,
-                guests: document.getElementById('rsvp-guests').value,
-                message: document.getElementById('rsvp-message').value
-            };
+            const name = document.getElementById('rsvp-name').value;
+            const status = document.getElementById('rsvp-status').value;
+            const guests = document.getElementById('rsvp-guests').value;
+            const message = document.getElementById('rsvp-message').value;
 
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengirim...</span>`;
 
             try {
                 if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "URL_GOOGLE_APPS_SCRIPT_ANDA_DI_SINI") {
+                    const formData = new URLSearchParams();
+                    formData.append('timestamp', new Date().toLocaleString('id-ID'));
+                    formData.append('name', name);
+                    formData.append('status', status);
+                    formData.append('guests', guests);
+                    formData.append('message', message);
+
                     await fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: formData.toString()
                     });
-                } else {
-                    let localData = JSON.parse(localStorage.getItem('rsvp_stba') || '[]');
-                    localData.push(payload);
-                    localStorage.setItem('rsvp_stba', JSON.stringify(localData));
                 }
 
                 alertBox.className = "mt-4 p-4 rounded-xl text-xs text-center bg-emerald-950/80 border-emerald-500/50 text-emerald-200";
